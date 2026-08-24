@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
 
     steps:
       - name: Checkout repository
@@ -27,6 +28,7 @@ jobs:
   test:
     runs-on: macos-latest
     needs: build
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
 
     steps:
       - name: Checkout repository
