@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -45,6 +49,20 @@ jobs:
           destination: 'platform=iOS Simulator,name=iPhone 17'
           action: test
           result-bundle-path: 'TestResults/TestResults.xcresult'
+
+      - name: Convert test results to JUnit
+        run: |
+          brew install chargepoint/xcresultparser/xcresultparser
+          xcresultparser --output-format junit \
+            TestResults/TestResults.xcresult > TestResults/results.junit.xml
+        if: success() || failure()
+
+      - name: Publish test report
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'TestResults/results.junit.xml'
+          check_name: 'Test Results'
+        if: success() || failure()
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
