@@ -57,10 +57,19 @@ jobs:
           path: TestResults/TestResults.xcresult
         if: success() || failure()
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && needs.build.result == 'success' && needs.test.result == 'success' }}
+
+    steps:
+      - name: Simulate App Store deployment
+        run: echo "Build and tests passed — the app would be archived, signed, and uploaded to TestFlight / App Store Connect here. This step is simulated, no real deployment is performed."
+
   report:
     runs-on: macos-latest
-    needs: test
-    if: ${{ !startsWith(github.head_ref, 'release-please--') && (success() || failure()) }}
+    needs: [test, deploy]
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && always() }}
 
     steps:
       - name: Download test results
@@ -99,18 +108,15 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [build, test]
-    if: ${{ !startsWith(github.head_ref, 'release-please--') && needs.build.result == 'success' && needs.test.result == 'success' }}
-
-    steps:
-      - name: Simulate App Store deployment
+      - name: Report deployment status
         run: |
           {
+            echo ""
             echo "## Deployment"
             echo ""
-            echo "Build and tests passed — the app is ready to be deployed to TestFlight / App Store Connect."
-            echo ""
-            echo "_This step is simulated: no archive, signing, or upload is actually performed._"
+            case "${{ needs.deploy.result }}" in
+              success) echo "✅ Deployment step succeeded — the app is ready for TestFlight / App Store." ;;
+              skipped) echo "⏭️ Deployment skipped — build or tests did not succeed." ;;
+              *) echo "❌ Deployment step failed." ;;
+            esac
           } >> "$GITHUB_STEP_SUMMARY"
