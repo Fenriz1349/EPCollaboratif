@@ -50,37 +50,10 @@ jobs:
           action: test
           result-bundle-path: 'TestResults/TestResults.xcresult'
 
-      - name: Convert test results to JUnit
-        run: |
-          xcrun xcresulttool get --legacy --path TestResults/TestResults.xcresult --format json \
-            | python3 -c "
-import sys, json
-from xml.etree.ElementTree import Element, SubElement, tostring
-from xml.dom.minidom import parseString
-
-data = json.load(sys.stdin)
-suites = Element('testsuites')
-
-for suite in data.get('tests', [{}])[0].get('subtests', [{}])[0].get('subtests', []):
-    ts = SubElement(suites, 'testsuite', name=suite.get('name', ''))
-    for test in suite.get('subtests', []):
-        tc = SubElement(ts, 'testcase',
-            classname=suite.get('name', ''),
-            name=test.get('name', ''),
-            time=str(test.get('duration', 0)))
-        if test.get('testStatus') == 'Failure':
-            SubElement(tc, 'failure', message='Test failed')
-
-print(parseString(tostring(suites)).toprettyxml(indent='  '))
-" > TestResults/results.junit.xml
-        if: success() || failure()
-
       - name: Publish test report
-        uses: mikepenz/action-junit-report@v4
+        uses: test-summary/action@v2
         with:
-          report_paths: 'TestResults/results.junit.xml'
-          check_name: 'Test Results'
-          include_passed: true
+          paths: 'TestResults/TestResults.xcresult'
         if: success() || failure()
 
       - name: Upload test results
