@@ -52,9 +52,8 @@ jobs:
 
       - name: Convert test results to JUnit
         run: |
-          brew install chargepoint/xcresultparser/xcresultparser
-          xcresultparser --output-format junit \
-            TestResults/TestResults.xcresult > TestResults/results.junit.xml
+          xcrun xcresulttool get --path TestResults/TestResults.xcresult \
+            --format junit > TestResults/results.junit.xml
         if: success() || failure()
 
       - name: Publish test report
@@ -62,6 +61,7 @@ jobs:
         with:
           report_paths: 'TestResults/results.junit.xml'
           check_name: 'Test Results'
+          include_passed: true
         if: success() || failure()
 
       - name: Upload test results
