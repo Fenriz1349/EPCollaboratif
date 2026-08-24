@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.3](https://github.com/Fenriz1349/EPCollaboratif/compare/EPCollaboratif-v1.0.2...EPCollaboratif-v1.0.3) (2026-08-24)
+
+
+### Corrections
+
+* fix versioning ([b6b8638](https://github.com/Fenriz1349/EPCollaboratif/commit/b6b8638c1ed38df76c4cc70377f2e602224258d4))
+* fix versioning ([4adbcc2](https://github.com/Fenriz1349/EPCollaboratif/commit/4adbcc21761f56bde5c7831250b455a2192f486e))
+
 ## [1.0.2](https://github.com/Fenriz1349/EPCollaboratif/compare/EPCollaboratif-v1.0.1...EPCollaboratif-v1.0.2) (2026-08-24)
 
 
