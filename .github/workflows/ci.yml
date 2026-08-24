@@ -22,7 +22,7 @@ jobs:
         run: xcrun agvtool new-version -all ${{ github.run_number }}
 
       - name: Build
-        uses: sersoft-gmbh/xcodebuild-action@v3.2.0
+        uses: sersoft-gmbh/xcodebuild-action@v4.0.0
         with:
           project: EPCollaboratif.xcodeproj
           scheme: EPCollaboratif
@@ -42,7 +42,7 @@ jobs:
         run: xcrun agvtool new-version -all ${{ github.run_number }}
 
       - name: Test
-        uses: sersoft-gmbh/xcodebuild-action@v3.2.0
+        uses: sersoft-gmbh/xcodebuild-action@v4.0.0
         with:
           project: EPCollaboratif.xcodeproj
           scheme: EPCollaboratif
@@ -52,11 +52,27 @@ jobs:
 
       - name: Convert test results to JUnit
         run: |
-          curl -sL https://github.com/ChargePoint/xcresultparser/releases/latest/download/xcresultparser.zip -o /tmp/xcresultparser.zip
-          unzip -q /tmp/xcresultparser.zip -d /tmp/xcresultparser
-          chmod +x /tmp/xcresultparser/xcresultparser
-          /tmp/xcresultparser/xcresultparser --output-format junit \
-            TestResults/TestResults.xcresult > TestResults/results.junit.xml
+          xcrun xcresulttool get --legacy --path TestResults/TestResults.xcresult --format json \
+            | python3 -c "
+import sys, json
+from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.dom.minidom import parseString
+
+data = json.load(sys.stdin)
+suites = Element('testsuites')
+
+for suite in data.get('tests', [{}])[0].get('subtests', [{}])[0].get('subtests', []):
+    ts = SubElement(suites, 'testsuite', name=suite.get('name', ''))
+    for test in suite.get('subtests', []):
+        tc = SubElement(ts, 'testcase',
+            classname=suite.get('name', ''),
+            name=test.get('name', ''),
+            time=str(test.get('duration', 0)))
+        if test.get('testStatus') == 'Failure':
+            SubElement(tc, 'failure', message='Test failed')
+
+print(parseString(tostring(suites)).toprettyxml(indent='  '))
+" > TestResults/results.junit.xml
         if: success() || failure()
 
       - name: Publish test report
