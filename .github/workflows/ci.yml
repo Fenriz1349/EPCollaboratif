@@ -50,15 +50,51 @@ jobs:
           action: test
           result-bundle-path: 'TestResults/TestResults.xcresult'
 
-      - name: Publish test report
-        uses: test-summary/action@v2
-        with:
-          paths: 'TestResults/TestResults.xcresult'
-        if: success() || failure()
-
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: TestResults
           path: TestResults/TestResults.xcresult
         if: success() || failure()
+
+  report:
+    runs-on: macos-latest
+    needs: test
+    if: ${{ !startsWith(github.head_ref, 'release-please--') && (success() || failure()) }}
+
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: TestResults
+          path: TestResults/TestResults.xcresult
+
+      - name: Generate test report
+        run: |
+          xcrun xcresulttool get test-results summary \
+            --path TestResults/TestResults.xcresult \
+            --format json > summary.json
+
+          {
+            echo "## Test Report"
+            echo ""
+            echo "| Metric | Value |"
+            echo "| --- | --- |"
+            jq -r '
+              "| Result | \(.result) |",
+              "| Total tests | \(.totalTestCount) |",
+              "| Passed | \(.passedTests) |",
+              "| Failed | \(.failedTests) |",
+              "| Skipped | \(.skippedTests) |"
+            ' summary.json
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          failing=$(jq -r '.failedTests' summary.json)
+          if [ "$failing" -gt 0 ]; then
+            {
+              echo ""
+              echo "### Failures"
+              echo ""
+              jq -r '.testFailures[]? | "- **\(.testName)**: \(.failureText)"' summary.json
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
