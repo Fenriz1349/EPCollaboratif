@@ -6,24 +6,47 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  build:
     runs-on: macos-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Build and Test
+      - name: Set build number
+        run: xcrun agvtool new-version -all ${{ github.run_number }}
+
+      - name: Build
         uses: sersoft-gmbh/xcodebuild-action@v3.2.0
         with:
           project: EPCollaboratif.xcodeproj
           scheme: EPCollaboratif
-          destination: 'platform=iOS Simulator,name=iPhone 14'
+          destination: 'platform=iOS Simulator,name=iPhone 17'
+          action: build
+
+  test:
+    runs-on: macos-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set build number
+        run: xcrun agvtool new-version -all ${{ github.run_number }}
+
+      - name: Test
+        uses: sersoft-gmbh/xcodebuild-action@v3.2.0
+        with:
+          project: EPCollaboratif.xcodeproj
+          scheme: EPCollaboratif
+          destination: 'platform=iOS Simulator,name=iPhone 17'
           action: test
           result-bundle-path: 'TestResults/TestResults.xcresult'
 
-      - name: Process Test Results
-        uses: kishikawakatsumi/xcresulttool@v1
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         with:
+          name: TestResults
           path: TestResults/TestResults.xcresult
         if: success() || failure()

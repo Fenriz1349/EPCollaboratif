@@ -1,0 +1,14 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "version-file": "EPCollaboratif/Version.xcconfig",
+      "version-key": "MARKETING_VERSION",
+      "extra-files": [
+        "EPCollaboratif/Version.xcconfig"
+      ]
+    }
+  },
+  "changelog-path": "CHANGELOG.md",
+  "pull-request-title-pattern": "chore: release ${version}"
+}
