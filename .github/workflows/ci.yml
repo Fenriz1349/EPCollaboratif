@@ -52,8 +52,11 @@ jobs:
 
       - name: Convert test results to JUnit
         run: |
-          xcrun xcresulttool get --path TestResults/TestResults.xcresult \
-            --format junit > TestResults/results.junit.xml
+          curl -sL https://github.com/ChargePoint/xcresultparser/releases/latest/download/xcresultparser.zip -o /tmp/xcresultparser.zip
+          unzip -q /tmp/xcresultparser.zip -d /tmp/xcresultparser
+          chmod +x /tmp/xcresultparser/xcresultparser
+          /tmp/xcresultparser/xcresultparser --output-format junit \
+            TestResults/TestResults.xcresult > TestResults/results.junit.xml
         if: success() || failure()
 
       - name: Publish test report
