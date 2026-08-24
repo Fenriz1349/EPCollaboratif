@@ -7,7 +7,9 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "EPCollaboratif/Version.xcconfig"
+          "path": "EPCollaboratif/Version.xcconfig",
+          "search-value": "MARKETING_VERSION = {{version}}",
+          "replace-value": "MARKETING_VERSION = {{version}}"
         }
       ],
       "changelog-sections": [
