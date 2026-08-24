@@ -11,19 +11,35 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Set build number
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" \
+            $(xcodebuild -project EPCollaboratif.xcodeproj \
+              -scheme EPCollaboratif \
+              -showBuildSettings 2>/dev/null \
+              | grep INFOPLIST_FILE | head -1 | awk '{print $3}') 2>/dev/null || \
+          xcrun agvtool new-version -all ${{ github.run_number }}
 
       - name: Build and Test
         uses: sersoft-gmbh/xcodebuild-action@v3.2.0
         with:
           project: EPCollaboratif.xcodeproj
           scheme: EPCollaboratif
-          destination: 'platform=iOS Simulator,name=iPhone 14'
+          destination: 'platform=iOS Simulator,name=iPhone 17'
           action: test
           result-bundle-path: 'TestResults/TestResults.xcresult'
 
       - name: Process Test Results
         uses: kishikawakatsumi/xcresulttool@v1
         with:
+          path: TestResults/TestResults.xcresult
+        if: success() || failure()
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
           path: TestResults/TestResults.xcresult
         if: success() || failure()
