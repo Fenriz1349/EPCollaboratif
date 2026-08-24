@@ -4,6 +4,7 @@
     ".": {
       "release-type": "simple",
       "package-name": "EPCollaboratif",
+      "include-component-in-tag": false,
       "extra-files": [
         {
           "type": "generic",
